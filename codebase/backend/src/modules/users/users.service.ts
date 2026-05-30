@@ -41,6 +41,46 @@ export class UsersService {
     return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
 
+  async setResetPasswordToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          resetPasswordToken: tokenHash,
+          resetPasswordExpires: expiresAt,
+        },
+      },
+    ).exec();
+  }
+
+  async clearResetPasswordToken(userId: string): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $unset: {
+          resetPasswordToken: '',
+          resetPasswordExpires: '',
+        },
+      },
+    ).exec();
+  }
+
+  async findByResetTokenHash(tokenHash: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: { $gt: new Date() },
+    }).exec();
+  }
+
+  async updatePassword(userId: string, passwordPlain: string): Promise<void> {
+    const salt = await bcrypt.genSalt(12);
+    const passwordHash = await bcrypt.hash(passwordPlain, salt);
+    await this.userModel.updateOne(
+      { _id: userId },
+      { $set: { passwordHash } },
+    ).exec();
+  }
+
   async decrementCredits(userId: string): Promise<UserDocument> {
     const user = await this.findById(userId);
     if (!user) {

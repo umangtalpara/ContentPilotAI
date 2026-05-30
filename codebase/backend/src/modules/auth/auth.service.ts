@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { UserDocument } from '../users/schemas/user.schema';
 
@@ -61,6 +62,45 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+
+    // Always return a generic response to prevent email enumeration.
+    if (!user) {
+      return { message: 'If an account exists for this email, password reset instructions have been sent.' };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
+
+    await this.usersService.setResetPasswordToken(user._id.toString(), tokenHash, expiresAt);
+
+    const response: Record<string, string> = {
+      message: 'If an account exists for this email, password reset instructions have been sent.',
+    };
+
+    // Dev helper until email provider is integrated.
+    if ((process.env.NODE_ENV || 'development') !== 'production') {
+      response.resetToken = rawToken;
+    }
+
+    return response;
+  }
+
+  async resetPassword(token: string, passwordPlain: string) {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await this.usersService.findByResetTokenHash(tokenHash);
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    await this.usersService.updatePassword(user._id.toString(), passwordPlain);
+    await this.usersService.clearResetPasswordToken(user._id.toString());
+
+    return { message: 'Password reset successful. You can now sign in with your new password.' };
   }
 
   private async generateTokens(user: UserDocument) {

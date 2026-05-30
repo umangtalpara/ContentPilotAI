@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, UseGuards, UsePipes } from '@nestjs/common';
-import { RegisterSchema, LoginSchema, RegisterInput, LoginInput } from '@contentpilot/shared';
+import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema } from '@contentpilot/shared';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -24,6 +24,18 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshTokens(refreshToken);
+  }
+
+  @Post('forgot-password')
+  @UsePipes(new ZodValidationPipe(ForgotPasswordSchema))
+  async forgotPassword(@Body() body: any) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  @UsePipes(new ZodValidationPipe(ResetPasswordSchema))
+  async resetPassword(@Body() body: any) {
+    return this.authService.resetPassword(body.token, body.password);
   }
 
   @Get('me')
