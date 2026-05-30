@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { UserDocument } from '../users/schemas/user.schema';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mailService: MailService,
   ) {}
 
   async register(email: string, passwordPlain: string, name: string) {
@@ -75,15 +77,18 @@ export class AuthService {
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const resetLink = `${frontendUrl}/reset-password?token=${encodeURIComponent(rawToken)}`;
 
     await this.usersService.setResetPasswordToken(user._id.toString(), tokenHash, expiresAt);
+    await this.mailService.sendPasswordResetEmail(user.email, resetLink);
 
     const response: Record<string, string> = {
       message: 'If an account exists for this email, password reset instructions have been sent.',
     };
 
-    // Dev helper until email provider is integrated.
-    if ((process.env.NODE_ENV || 'development') !== 'production') {
+    // Dev helper for local testing when SMTP is not configured.
+    if ((process.env.NODE_ENV || 'development') !== 'production' && !this.mailService.isEnabled()) {
       response.resetToken = rawToken;
     }
 

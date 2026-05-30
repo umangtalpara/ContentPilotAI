@@ -4,12 +4,14 @@ import { Model, Types } from 'mongoose';
 import { UserRole } from '@contentpilot/shared';
 import { Workspace, WorkspaceDocument } from './schemas/workspace.schema';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class WorkspacesService {
   constructor(
     @InjectModel(Workspace.name) private workspaceModel: Model<WorkspaceDocument>,
     private usersService: UsersService,
+    private mailService: MailService,
   ) {}
 
   async create(name: string, ownerId: string): Promise<WorkspaceDocument> {
@@ -80,7 +82,9 @@ export class WorkspacesService {
       role,
     });
 
-    return workspace.save();
+    const saved = await workspace.save();
+    await this.mailService.sendWorkspaceInviteEmail(invitedUser.email, workspace.name, role);
+    return saved;
   }
 
   async removeMember(workspaceId: string, userIdToRemove: string): Promise<WorkspaceDocument> {

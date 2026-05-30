@@ -14,6 +14,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     BillingModule,
     CollaborationModule,
     AnalyticsModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
