@@ -58,8 +58,8 @@ export const IntegrationsList: React.FC = () => {
   const getConnectUrl = (platform: 'linkedin' | 'twitter') => {
     if (!currentWorkspace) return '#';
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-    // Redirects browser natively through the mock callback loop!
-    return `${baseUrl}/integrations/${platform}/callback?code=mock-code&state=${currentWorkspace._id}`;
+    // Starts OAuth flow; provider returns back to callback endpoint.
+    return `${baseUrl}/workspaces/${currentWorkspace._id}/integrations/${platform}/start`;
   };
 
   const channels = [
