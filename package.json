@@ -1,0 +1,15 @@
+{
+  "name": "contentpilot-monorepo",
+  "private": true,
+  "workspaces": [
+    "codebase/shared",
+    "codebase/backend",
+    "codebase/frontend"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "build:shared": "npm run build --workspace=codebase/shared",
+    "dev:backend": "npm run start:dev --workspace=codebase/backend",
+    "dev:frontend": "npm run dev --workspace=codebase/frontend"
+  }
+}

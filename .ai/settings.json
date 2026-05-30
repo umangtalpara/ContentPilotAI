@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "SaaS AI Factory",
+    "description": "Autonomous multi-agent software factory for PRD-to-SaaS application development",
+    "organization": "ProvenPeak Solutions",
+    "created": "2026-05-25",
+    "status": "initialized"
+  },
+  "agents": {
+    "super-agent": {
+      "role": "Master Controller & Orchestrator",
+      "file": "agents/super-agent.md",
+      "priority": 1,
+      "autostart": true
+    },
+    "deep-plan-agent": {
+      "role": "Strategic Planning & Architecture",
+      "file": "agents/deep-plan-agent.md",
+      "priority": 2,
+      "autostart": false
+    },
+    "backend-agent": {
+      "role": "Backend Development",
+      "file": "agents/backend-agent.md",
+      "priority": 3,
+      "autostart": false
+    },
+    "frontend-agent": {
+      "role": "Frontend Development",
+      "file": "agents/frontend-agent.md",
+      "priority": 4,
+      "autostart": false
+    },
+    "qa-agent": {
+      "role": "Quality Assurance & Testing",
+      "file": "agents/qa-agent.md",
+      "priority": 5,
+      "autostart": false
+    },
+    "code-review-agent": {
+      "role": "Code Review & Security Audit",
+      "file": "agents/code-review-agent.md",
+      "priority": 6,
+      "autostart": false
+    }
+  },
+  "workflow": {
+    "pipeline": [
+      "prd-to-plan",
+      "roadmap-to-phase",
+      "phase-execution",
+      "testing",
+      "deployment"
+    ],
+    "execution_order": [
+      "super-agent",
+      "deep-plan-agent",
+      "backend-agent",
+      "frontend-agent",
+      "qa-agent",
+      "code-review-agent"
+    ]
+  },
+  "retry_policy": {
+    "max_retries": 3,
+    "retry_failed_only": true,
+    "preserve_completed": true,
+    "backoff_strategy": "exponential",
+    "base_delay_seconds": 5
+  },
+  "documentation": {
+    "auto_update": true,
+    "targets": [
+      "project-management/*",
+      "memory/*"
+    ],
+    "update_triggers": [
+      "task_complete",
+      "task_failed",
+      "phase_complete",
+      "agent_status_change",
+      "blocker_detected"
+    ]
+  },
+  "tech_stack": {
+    "backend": {
+      "runtime": "Node.js",
+      "framework": "NestJS",
+      "language": "TypeScript",
+      "databases": [
+        "MongoDB"
+      ],
+      "cache": "Redis",
+      "queue": "RabbitMQ",
+      "containerization": "Docker",
+      "api_docs": "Swagger/OpenAPI"
+    },
+    "frontend": {
+      "framework": "Next.js",
+      "library": "React",
+      "language": "TypeScript",
+      "styling": "Tailwind CSS",
+      "components": "Shadcn UI",
+      "state": "Zustand",
+      "animations": "Framer Motion"
+    },
+    "testing": {
+      "unit": "Jest",
+      "integration": "Supertest",
+      "e2e": "Playwright",
+      "api": "Postman/Newman"
+    },
+    "devops": {
+      "ci_cd": "GitHub Actions",
+      "containerization": "Docker + Docker Compose",
+      "monitoring": "Prometheus + Grafana",
+      "logging": "Winston + ELK"
+    }
+  },
+  "paths": {
+    "agents": ".ai/agents",
+    "skills": ".ai/skills",
+    "workflows": ".ai/workflows",
+    "context": ".ai/context",
+    "memory": ".ai/memory",
+    "project_management": ".ai/project-management",
+    "templates": ".ai/templates",
+    "prd": "doc/prd.md",
+    "source_backend": "codebase/backend",
+    "source_frontend": "codebase/frontend",
+    "tests": "tests"
+  }
+}

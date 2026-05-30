@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: contentpilot-mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: contentpilot
+    restart: always
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: contentpilot-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: always
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
