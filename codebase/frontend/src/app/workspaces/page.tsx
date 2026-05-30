@@ -29,6 +29,8 @@ export default function WorkspacesPage() {
     refreshWorkspaces,
   } = useAuth();
 
+  const isOwner = !!(currentWorkspace && user && currentWorkspace.ownerId === user.id);
+
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
@@ -350,16 +352,18 @@ export default function WorkspacesPage() {
               >
                 📊 Performance Analytics
               </button>
-              <button
-                onClick={() => setActiveTab('billing')}
-                className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'billing'
-                    ? 'border-amber-550 text-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                💎 Subscription & Plans
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => setActiveTab('billing')}
+                  className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+                    activeTab === 'billing'
+                      ? 'border-amber-550 text-white'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  💎 Subscription & Plans
+                </button>
+              )}
             </div>
 
             {/* Central Content Panel switcher */}
@@ -420,7 +424,7 @@ export default function WorkspacesPage() {
                       <CardDescription>Manage active members, roles, and send invitations</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className={`grid grid-cols-1 ${isOwner ? 'md:grid-cols-2' : ''} gap-8`}>
                         {/* Member Directory */}
                         <div>
                           <h4 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Active Members</h4>
@@ -449,58 +453,60 @@ export default function WorkspacesPage() {
                         </div>
 
                         {/* Invite Member */}
-                        <div>
-                          <h4 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Invite Team Member</h4>
-                          
-                          {inviteError && (
-                            <div className="bg-red-950/30 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg mb-4">
-                              {inviteError}
-                            </div>
-                          )}
-                          {inviteSuccess && (
-                            <div className="bg-emerald-950/30 border border-emerald-500/20 text-emerald-400 text-xs p-3 rounded-lg mb-4 animate-bounce">
-                              {inviteSuccess}
-                            </div>
-                          )}
+                        {isOwner && (
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Invite Team Member</h4>
+                            
+                            {inviteError && (
+                              <div className="bg-red-950/30 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg mb-4">
+                                {inviteError}
+                              </div>
+                            )}
+                            {inviteSuccess && (
+                              <div className="bg-emerald-950/30 border border-emerald-500/20 text-emerald-400 text-xs p-3 rounded-lg mb-4 animate-bounce">
+                                {inviteSuccess}
+                              </div>
+                            )}
 
-                          <form onSubmit={handleInviteMember} className="flex flex-col gap-4">
-                            <Input
-                              id="invite-name"
-                              label="Colleague's Full Name"
-                              placeholder="e.g. Sarah Connor (Optional)"
-                              value={inviteName}
-                              onChange={(e) => setInviteName(e.target.value)}
-                              disabled={isInviting}
-                            />
+                            <form onSubmit={handleInviteMember} className="flex flex-col gap-4">
+                              <Input
+                                id="invite-name"
+                                label="Colleague's Full Name"
+                                placeholder="e.g. Sarah Connor (Optional)"
+                                value={inviteName}
+                                onChange={(e) => setInviteName(e.target.value)}
+                                disabled={isInviting}
+                              />
 
-                            <Input
-                              id="invite-email"
-                              label="Colleague's Email"
-                              placeholder="coworker@provenpeak.com"
-                              value={inviteEmail}
-                              onChange={(e) => setInviteEmail(e.target.value)}
-                              disabled={isInviting}
-                              required
-                            />
+                              <Input
+                                id="invite-email"
+                                label="Colleague's Email"
+                                placeholder="coworker@provenpeak.com"
+                                value={inviteEmail}
+                                onChange={(e) => setInviteEmail(e.target.value)}
+                                disabled={isInviting}
+                                required
+                              />
 
-                            <div className="flex flex-col gap-2">
-                              <label htmlFor="invite-role" className="text-sm font-medium text-slate-300">Role Authority</label>
-                              <select
-                                id="invite-role"
-                                value={inviteRole}
-                                onChange={(e) => setInviteRole(e.target.value)}
-                                className="flex h-12 w-full rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-2 text-sm md:text-base text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-                              >
-                                <option value="editor">Editor (Can create & schedule posts)</option>
-                                <option value="viewer">Viewer (Can comment & review calendar)</option>
-                              </select>
-                            </div>
+                              <div className="flex flex-col gap-2">
+                                <label htmlFor="invite-role" className="text-sm font-medium text-slate-300">Role Authority</label>
+                                <select
+                                  id="invite-role"
+                                  value={inviteRole}
+                                  onChange={(e) => setInviteRole(e.target.value)}
+                                  className="flex h-12 w-full rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-2 text-sm md:text-base text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                >
+                                  <option value="editor">Editor (Can create & schedule posts)</option>
+                                  <option value="viewer">Viewer (Can comment & review calendar)</option>
+                                </select>
+                              </div>
 
-                            <Button variant="primary" type="submit" isLoading={isInviting} className="w-full mt-2">
-                              Send Invite
-                            </Button>
-                          </form>
-                        </div>
+                              <Button variant="primary" type="submit" isLoading={isInviting} className="w-full mt-2">
+                                Send Invite
+                              </Button>
+                            </form>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

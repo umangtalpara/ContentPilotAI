@@ -53,6 +53,7 @@ export class WorkspacesService {
           { 'members.userId': new Types.ObjectId(userId) },
         ],
       })
+      .populate('members.userId', 'name email avatarUrl')
       .exec();
   }
 
@@ -112,6 +113,7 @@ export class WorkspacesService {
     });
 
     const saved = await workspace.save();
+    await saved.populate('members.userId', 'name email avatarUrl');
     await this.mailService.sendWorkspaceInviteEmail(invitedUser.email, workspace.name, role, owner?.name, tempPassword);
     
     if (tempPassword) {
