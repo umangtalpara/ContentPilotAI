@@ -3,12 +3,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Integration, IntegrationDocument } from './schemas/integration.schema';
+import { WorkspacesService } from '../workspaces/workspaces.service';
+import { UsersService } from '../users/users.service';
+import { TIER_LIMITS } from '../../common/constants/billing-limits';
 
 @Injectable()
 export class IntegrationsService {
   constructor(
     @InjectModel(Integration.name) private integrationModel: Model<IntegrationDocument>,
     private configService: ConfigService,
+    private workspacesService: WorkspacesService,
+    private usersService: UsersService,
   ) {}
 
   async createOrUpdate(
@@ -34,6 +39,24 @@ export class IntegrationsService {
       if (expiresAt) existing.expiresAt = expiresAt;
       if (profileDetails) existing.profileDetails = profileDetails;
       return existing.save();
+    }
+
+    const existingCount = await this.integrationModel.countDocuments({
+      workspaceId: new Types.ObjectId(workspaceId),
+    });
+
+    const workspace = await this.workspacesService.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+    const owner = await this.usersService.findById(workspace.ownerId.toString());
+    const tier = owner?.subscriptionTier || 'free';
+    const limit = TIER_LIMITS[tier]?.integrations ?? 1;
+
+    if (existingCount >= limit) {
+      throw new BadRequestException(
+        `Social integration limit reached. Your current plan (${tier.toUpperCase()}) allows up to ${limit} active social connection(s) per workspace. Please upgrade your plan to connect more.`
+      );
     }
 
     const created = new this.integrationModel({

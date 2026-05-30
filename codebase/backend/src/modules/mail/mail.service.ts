@@ -63,17 +63,35 @@ export class MailService {
     workspaceName: string,
     role: string,
     inviterName?: string,
+    tempPassword?: string,
   ): Promise<boolean> {
     const subject = `You were invited to "${workspaceName}" on ContentPilot AI`;
     const inviterText = inviterName ? `${inviterName} invited you` : 'You were invited';
-    const html = `
+    
+    let html = `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
         <h2>Workspace Invitation</h2>
         <p>${inviterText} to join <strong>${workspaceName}</strong>.</p>
         <p>Your role: <strong>${role}</strong></p>
-        <p>Sign in to your account and open the workspace dashboard.</p>
+    `;
+
+    if (tempPassword) {
+      html += `
+        <div style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin:20px 0;">
+          <h3 style="margin-top:0; color:#0f172a;">Your Account Credentials</h3>
+          <p style="margin:4px 0;">A new user account has been registered for you. Log in using:</p>
+          <p style="margin:4px 0;">Email: <strong>${toEmail}</strong></p>
+          <p style="margin:4px 0;">Temporary Password: <code style="background:#e2e8f0; padding:2px 4px; border-radius:4px; font-weight:bold;">${tempPassword}</code></p>
+          <p style="margin:10px 0 0 0; font-size:12px; color:#64748b;"><em>* Please make sure to change your password immediately after logging in.</em></p>
+        </div>
+      `;
+    }
+
+    html += `
+        <p>Sign in to your account and open the workspace dashboard to get started.</p>
       </div>
     `;
+    
     return this.sendMail(toEmail, subject, html);
   }
 

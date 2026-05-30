@@ -41,7 +41,7 @@ export class WorkspacesController {
   @WorkspaceRoles(UserRole.OWNER)
   @UsePipes(new ZodValidationPipe(InviteMemberSchema))
   async inviteMember(@Param('id') id: string, @Body() body: any) {
-    return this.workspacesService.inviteMember(id, body.email, body.role);
+    return this.workspacesService.inviteMember(id, body.email, body.role, body.name);
   }
 
   @Delete(':id/members/:userId')

@@ -15,11 +15,13 @@ import CommentsSection from '../../components/CommentsSection';
 import ActivityFeed from '../../components/ActivityFeed';
 import AnalyticsDashboard from '../../components/AnalyticsDashboard';
 import FirstCampaignWizard from '../../components/FirstCampaignWizard';
+import SubscriptionPlans from '../../components/SubscriptionPlans';
 import { useToast } from '../../context/ToastContext';
 
 export default function WorkspacesPage() {
   const { showToast } = useToast();
   const {
+    user,
     workspaces,
     currentWorkspace,
     createWorkspace,
@@ -29,6 +31,7 @@ export default function WorkspacesPage() {
 
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
   const [inviteRole, setInviteRole] = useState('editor');
   
   const [isCreating, setIsCreating] = useState(false);
@@ -45,7 +48,7 @@ export default function WorkspacesPage() {
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'integrations' | 'analytics'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'integrations' | 'analytics' | 'billing'>('calendar');
   const [showOnboarding, setShowOnboarding] = useState(true);
 
   // Comments drawer state
@@ -113,14 +116,22 @@ export default function WorkspacesPage() {
 
     setIsInviting(true);
     try {
-      await api.post(`/workspaces/${currentWorkspace._id}/invite`, {
+      const res = await api.post<{ tempPassword?: string }>(`/workspaces/${currentWorkspace._id}/invite`, {
         email: inviteEmail,
         role: inviteRole,
+        name: inviteName.trim() || undefined,
       });
-      setInviteSuccess(`Successfully invited ${inviteEmail}!`);
+      
+      const isNewUser = !!res?.tempPassword;
+      const successMsg = isNewUser 
+        ? `Successfully created account for ${inviteEmail}! Temporary Password: ${res.tempPassword}`
+        : `Successfully invited ${inviteEmail}!`;
+        
+      setInviteSuccess(successMsg);
       setInviteEmail('');
+      setInviteName('');
       await refreshWorkspaces();
-      showToast('Member invited successfully.', 'success');
+      showToast(isNewUser ? 'User created & added to team!' : 'Member invited successfully.', 'success');
     } catch (err: any) {
       setInviteError(err.message || 'Failed to invite user');
       showToast(err.message || 'Failed to invite user.', 'error');
@@ -231,8 +242,19 @@ export default function WorkspacesPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest leading-none">Dashboard</span>
-                <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mt-1 leading-none">
+                <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mt-1 leading-none flex items-center gap-3">
                   {currentWorkspace.name} Control Panel
+                  {user && (
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider border select-none ${
+                      user.subscriptionTier === 'agency'
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                        : user.subscriptionTier === 'pro'
+                        ? 'bg-indigo-500/10 text-indigo-450 border-indigo-500/30'
+                        : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                    }`}>
+                      {user.subscriptionTier === 'agency' ? '🏢 Agency' : user.subscriptionTier === 'pro' ? '⭐ Pro' : '🆓 Free'}
+                    </span>
+                  )}
                 </h1>
               </div>
               <div className="flex items-center gap-3">
@@ -327,6 +349,16 @@ export default function WorkspacesPage() {
                 }`}
               >
                 📊 Performance Analytics
+              </button>
+              <button
+                onClick={() => setActiveTab('billing')}
+                className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'billing'
+                    ? 'border-amber-550 text-white'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                💎 Subscription & Plans
               </button>
             </div>
 
@@ -433,6 +465,15 @@ export default function WorkspacesPage() {
 
                           <form onSubmit={handleInviteMember} className="flex flex-col gap-4">
                             <Input
+                              id="invite-name"
+                              label="Colleague's Full Name"
+                              placeholder="e.g. Sarah Connor (Optional)"
+                              value={inviteName}
+                              onChange={(e) => setInviteName(e.target.value)}
+                              disabled={isInviting}
+                            />
+
+                            <Input
                               id="invite-email"
                               label="Colleague's Email"
                               placeholder="coworker@provenpeak.com"
@@ -471,7 +512,7 @@ export default function WorkspacesPage() {
                   <IntegrationsList />
                 </Card>
               </motion.div>
-            ) : (
+            ) : activeTab === 'analytics' ? (
               /* Analytics Tab */
               <motion.div variants={cardVariants}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
@@ -504,6 +545,11 @@ export default function WorkspacesPage() {
                   {/* Activity Feed */}
                   <ActivityFeed workspaceId={currentWorkspace._id} limit={30} />
                 </div>
+              </motion.div>
+            ) : (
+              /* Billing/Subscription Tab */
+              <motion.div variants={cardVariants}>
+                <SubscriptionPlans />
               </motion.div>
             )}
 

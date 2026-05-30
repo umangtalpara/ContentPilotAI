@@ -10,6 +10,7 @@ interface User {
   avatarUrl?: string;
   isVerified: boolean;
   aiCreditsRemaining?: number;
+  subscriptionTier?: string;
 }
 
 interface Workspace {

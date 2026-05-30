@@ -38,6 +38,7 @@ export const CreateWorkspaceSchema = z.object({
 export const InviteMemberSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
   role: z.nativeEnum(UserRole, { errorMap: () => ({ message: 'Invalid role selection' }) }),
+  name: z.string().min(2).max(50).optional(),
 });
 
 // Post Validation Schemas
