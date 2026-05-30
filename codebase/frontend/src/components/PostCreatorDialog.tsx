@@ -7,6 +7,7 @@ import { Dialog } from './ui/Dialog';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { AiAssistantDrawer } from './AiAssistantDrawer';
+import { useToast } from '../context/ToastContext';
 
 interface PostCreatorDialogProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
   onSuccess,
 }) => {
   const { currentWorkspace } = useAuth();
+  const { showToast } = useToast();
 
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
@@ -168,10 +170,12 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
       setScheduleAt('');
       setHashtags([]);
       setMediaUrls([]);
+      showToast('Post scheduled successfully.', 'success');
       onSuccess();
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to create post');
+      showToast(err.message || 'Failed to create post.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -364,4 +368,3 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
     </Dialog>
   );
 };
-

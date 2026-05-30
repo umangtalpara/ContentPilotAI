@@ -123,7 +123,7 @@ export default function AnalyticsDashboard({ workspaceId }: AnalyticsDashboardPr
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('cp_access_token');
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'}/workspaces/${workspaceId}/analytics`,
         { headers: { Authorization: `Bearer ${token}` } },
@@ -177,6 +177,10 @@ export default function AnalyticsDashboard({ workspaceId }: AnalyticsDashboardPr
     : 0;
 
   const platformEntries = Object.entries(data.platformCounts).sort(([, a], [, b]) => b - a);
+  const reliability30d = data.recentActivity.postsCreatedLast30Days > 0
+    ? Math.round((data.recentActivity.postsPublishedLast30Days / data.recentActivity.postsCreatedLast30Days) * 100)
+    : 0;
+  const failedCount = data.statusCounts.failed ?? 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -271,6 +275,26 @@ export default function AnalyticsDashboard({ workspaceId }: AnalyticsDashboardPr
             max={data.totalPosts || 1}
             label="Failed" sublabel="Needs review" color="#ef4444"
           />
+        </div>
+      </div>
+
+      {/* Reliability KPI Strip */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+        gap: 12,
+      }}>
+        <div style={{ border: '1px solid rgba(34,197,94,0.25)', borderRadius: 12, padding: '12px 14px', background: 'rgba(34,197,94,0.08)' }}>
+          <div style={{ fontSize: 11, color: '#86efac' }}>Publish Success</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#bbf7d0' }}>{publishRate}%</div>
+        </div>
+        <div style={{ border: '1px solid rgba(14,165,233,0.25)', borderRadius: 12, padding: '12px 14px', background: 'rgba(14,165,233,0.08)' }}>
+          <div style={{ fontSize: 11, color: '#7dd3fc' }}>Reliability (30d)</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#bae6fd' }}>{reliability30d}%</div>
+        </div>
+        <div style={{ border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12, padding: '12px 14px', background: 'rgba(239,68,68,0.08)' }}>
+          <div style={{ fontSize: 11, color: '#fca5a5' }}>Failed Needs Action</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#fecaca' }}>{failedCount}</div>
         </div>
       </div>
 

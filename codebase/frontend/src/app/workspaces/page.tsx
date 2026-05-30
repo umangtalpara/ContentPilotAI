@@ -14,8 +14,11 @@ import { BulkUploadDialog } from '../../components/BulkUploadDialog';
 import CommentsSection from '../../components/CommentsSection';
 import ActivityFeed from '../../components/ActivityFeed';
 import AnalyticsDashboard from '../../components/AnalyticsDashboard';
+import FirstCampaignWizard from '../../components/FirstCampaignWizard';
+import { useToast } from '../../context/ToastContext';
 
 export default function WorkspacesPage() {
+  const { showToast } = useToast();
   const {
     workspaces,
     currentWorkspace,
@@ -41,6 +44,7 @@ export default function WorkspacesPage() {
   const [integrationCount, setIntegrationCount] = useState(0);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'calendar' | 'integrations' | 'analytics'>('calendar');
   const [showOnboarding, setShowOnboarding] = useState(true);
 
@@ -92,8 +96,10 @@ export default function WorkspacesPage() {
     try {
       await createWorkspace(newWorkspaceName);
       setNewWorkspaceName('');
+      showToast('Workspace created successfully.', 'success');
     } catch (err: any) {
       setCreateError(err.message || 'Failed to create workspace');
+      showToast(err.message || 'Failed to create workspace.', 'error');
     } finally {
       setIsCreating(false);
     }
@@ -114,8 +120,10 @@ export default function WorkspacesPage() {
       setInviteSuccess(`Successfully invited ${inviteEmail}!`);
       setInviteEmail('');
       await refreshWorkspaces();
+      showToast('Member invited successfully.', 'success');
     } catch (err: any) {
       setInviteError(err.message || 'Failed to invite user');
+      showToast(err.message || 'Failed to invite user.', 'error');
     } finally {
       setIsInviting(false);
     }
@@ -228,6 +236,13 @@ export default function WorkspacesPage() {
                 </h1>
               </div>
               <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsWizardOpen(true)}
+                  className="min-h-[44px] min-w-[120px] font-semibold border-slate-800 hover:border-slate-700 bg-slate-950/40 text-slate-200 hover:bg-slate-900 transition-all cursor-pointer"
+                >
+                  First Campaign Wizard
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => setIsBulkUploadOpen(true)}
@@ -512,6 +527,22 @@ export default function WorkspacesPage() {
               workspaceId={currentWorkspace._id}
               isOpen={isCommentsOpen}
               onClose={() => setIsCommentsOpen(false)}
+            />
+
+            <FirstCampaignWizard
+              isOpen={isWizardOpen}
+              onClose={() => setIsWizardOpen(false)}
+              onGoToIntegrations={() => {
+                setActiveTab('integrations');
+                setIsWizardOpen(false);
+              }}
+              onOpenPostCreator={() => {
+                setIsPostDialogOpen(true);
+                setIsWizardOpen(false);
+              }}
+              integrationConnected={integrationCount > 0}
+              hasAnyPost={posts.length > 0}
+              hasScheduledOrPublished={posts.some((p) => p.status === 'scheduled' || p.status === 'published')}
             />
           </>
         ) : (

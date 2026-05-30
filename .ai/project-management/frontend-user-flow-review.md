@@ -186,7 +186,14 @@ Notes:
    - frontend retry button in calendar
    - backend retry endpoint: `POST /workspaces/:workspaceId/posts/:id/retry`
 
-### Phase C (pending)
-1. Add guided "Create first campaign" wizard.
-2. Add analytics KPI cards for publish reliability.
-3. Add notifications/toasts for invite, schedule, publish success/failure.
+### Phase C (implemented on 2026-05-30)
+1. Added guided "First Campaign Wizard" flow in workspace UI.
+2. Added analytics KPI strip for publish reliability:
+   - publish success rate
+   - reliability (30d)
+   - failed posts needing action
+3. Added global notifications/toasts:
+   - invite success/failure
+   - schedule/reschedule success/failure
+   - retry publish success/failure
+   - publish success/failure surfaced from activity feed events

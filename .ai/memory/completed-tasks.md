@@ -91,3 +91,25 @@
 - **Validation**:
   - Backend build: passed
   - Frontend build: passed
+
+### 2026-05-30: Phase C UX and Growth Flow Enhancements
+- **Scope**: Guided onboarding, reliability KPIs, and global user notifications.
+- **Implemented**:
+  - First Campaign Wizard modal with direct actions to:
+    - open social integrations
+    - open post creator
+    - track progress across first campaign milestones
+  - Analytics reliability KPI strip:
+    - publish success rate
+    - 30-day reliability
+    - failed posts needing action
+  - Global toast notification system:
+    - invite success/failure
+    - schedule/reschedule success/failure
+    - retry publish success/failure
+    - publish success/failure toasts from activity feed events
+  - Token key alignment updates for analytics/activity API calls:
+    - switched to `cp_access_token`
+- **Validation**:
+  - Backend build: passed
+  - Frontend build: passed

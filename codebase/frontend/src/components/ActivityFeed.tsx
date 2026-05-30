@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useToast } from '../context/ToastContext';
 
 interface ActivityItem {
   _id: string;
@@ -39,22 +40,35 @@ interface ActivityFeedProps {
 }
 
 export default function ActivityFeed({ workspaceId, limit = 20 }: ActivityFeedProps) {
+  const { showToast } = useToast();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   const fetchActivities = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('cp_access_token');
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'}/workspaces/${workspaceId}/activities?limit=${limit}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (res.ok) {
-        setActivities(await res.json());
+        const data: ActivityItem[] = await res.json();
+        for (const item of data) {
+          if (!seenIdsRef.current.has(item._id)) {
+            if (item.action === 'post_published') {
+              showToast(item.details || 'A post was published successfully.', 'success');
+            } else if (item.action === 'post_failed') {
+              showToast(item.details || 'A post failed to publish.', 'error');
+            }
+          }
+        }
+        data.forEach((d) => seenIdsRef.current.add(d._id));
+        setActivities(data);
       } else {
         setError('Failed to load activity feed');
       }
@@ -63,7 +77,7 @@ export default function ActivityFeed({ workspaceId, limit = 20 }: ActivityFeedPr
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, limit]);
+  }, [workspaceId, limit, showToast]);
 
   useEffect(() => {
     fetchActivities();

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { Button } from './ui/Button';
+import { useToast } from '../context/ToastContext';
 
 interface Post {
   _id: string;
@@ -32,6 +33,7 @@ const STATUS_STYLE: Record<string, string> = {
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({ onPostUpdate, posts }) => {
   const { currentWorkspace } = useAuth();
+  const { showToast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [daysInMonth, setDaysInMonth] = useState<Date[]>([]);
   const [draggedPostId, setDraggedPostId] = useState<string | null>(null);
@@ -103,9 +105,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ onPostUpdate, posts 
         scheduleAt: newScheduledDate.toISOString(),
       });
       setFeedback('Post rescheduled successfully.');
+      showToast('Post rescheduled successfully.', 'success');
       onPostUpdate();
     } catch (err: any) {
       setFeedback(err.message || 'Failed to reschedule post.');
+      showToast(err.message || 'Failed to reschedule post.', 'error');
     }
   };
 
@@ -116,9 +120,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ onPostUpdate, posts 
     try {
       await api.post(`/workspaces/${currentWorkspace._id}/posts/${postId}/retry`);
       setFeedback('Failed post queued for retry.');
+      showToast('Failed post queued for retry.', 'success');
       onPostUpdate();
     } catch (err: any) {
       setFeedback(err.message || 'Failed to retry post.');
+      showToast(err.message || 'Failed to retry post.', 'error');
     } finally {
       setRetryingPostId(null);
     }
