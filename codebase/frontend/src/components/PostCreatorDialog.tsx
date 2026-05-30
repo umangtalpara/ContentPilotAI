@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { Dialog } from './ui/Dialog';
@@ -20,7 +20,7 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
   onSuccess,
 }) => {
   const { currentWorkspace } = useAuth();
-  
+
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [scheduleAt, setScheduleAt] = useState('');
@@ -28,12 +28,35 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
+
+  const [integrationPlatforms, setIntegrationPlatforms] = useState<string[]>([]);
+  const [integrationLoading, setIntegrationLoading] = useState(false);
+
+  useEffect(() => {
+    const loadIntegrations = async () => {
+      if (!currentWorkspace || !isOpen) return;
+      setIntegrationLoading(true);
+      try {
+        const data = await api.get<Array<{ platform: string }>>(`/workspaces/${currentWorkspace._id}/integrations`);
+        setIntegrationPlatforms(data.map((d) => d.platform));
+      } catch {
+        setIntegrationPlatforms([]);
+      } finally {
+        setIntegrationLoading(false);
+      }
+    };
+    void loadIntegrations();
+  }, [currentWorkspace, isOpen]);
+
+  const disconnectedSelectedPlatforms = useMemo(
+    () => selectedPlatforms.filter((p) => !integrationPlatforms.includes(p)),
+    [selectedPlatforms, integrationPlatforms],
+  );
 
   const togglePlatform = (platform: string) => {
     if (selectedPlatforms.includes(platform)) {
@@ -60,6 +83,15 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
     setHashtags(hashtags.filter((t) => t !== tag));
   };
 
+  const pathExtract = (url: string) => {
+    try {
+      const u = new URL(url);
+      return u.searchParams.get('filename') || 'file';
+    } catch {
+      return 'file';
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !currentWorkspace) return;
@@ -69,24 +101,19 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
     setError(null);
 
     try {
-      // 1. Get upload coordinates (presigned or local dev destination)
       const uploadCoords = await api.get<{ uploadUrl: string; downloadUrl: string; mode: string }>(
         `/workspaces/${currentWorkspace._id}/media/presigned?filename=${encodeURIComponent(file.name)}&mimeType=${encodeURIComponent(file.type)}`
       );
 
-      // 2. Perform the upload
       if (uploadCoords.mode === 'local') {
         const formData = new FormData();
         formData.append('file', file);
-        
-        // Call local server upload endpoint
         const uploadRes = await api.post<{ downloadUrl: string }>(
           `/workspaces/${currentWorkspace._id}/media/upload?filename=${pathExtract(uploadCoords.uploadUrl)}`,
-          formData
+          formData,
         );
         setMediaUrls([...mediaUrls, uploadRes.downloadUrl]);
       } else {
-        // Mock S3 direct upload
         await fetch(uploadCoords.uploadUrl, {
           method: 'PUT',
           body: file,
@@ -98,15 +125,6 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
       setError(err.message || 'File upload failed');
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const pathExtract = (url: string) => {
-    try {
-      const u = new URL(url);
-      return u.searchParams.get('filename') || 'file';
-    } catch {
-      return 'file';
     }
   };
 
@@ -130,6 +148,11 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
       return;
     }
 
+    if (disconnectedSelectedPlatforms.length > 0) {
+      setError(`Connect ${disconnectedSelectedPlatforms.join(', ')} before scheduling this post.`);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await api.post(`/workspaces/${currentWorkspace._id}/posts`, {
@@ -140,8 +163,6 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
         hashtags,
         mediaUrls,
       });
-
-      // Reset form states
       setTitle('');
       setCaption('');
       setScheduleAt('');
@@ -183,7 +204,7 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
               onClick={() => setIsAiDrawerOpen(true)}
               className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-cyan-950/20 hover:bg-cyan-950/40 hover:border-cyan-500/40 transition-all cursor-pointer min-h-[32px] font-sans"
             >
-              <span>✨ AI Sidekick</span>
+              <span>AI Sidekick</span>
             </button>
           </div>
           <textarea
@@ -198,12 +219,21 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
           />
         </div>
 
-        {/* Target Platforms */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-slate-300">Target Social Networks</label>
+          {integrationLoading ? (
+            <span className="text-[11px] text-slate-400">Checking connected channels...</span>
+          ) : disconnectedSelectedPlatforms.length > 0 ? (
+            <span className="text-[11px] text-amber-400">
+              Connect {disconnectedSelectedPlatforms.join(', ')} in Social Connections before scheduling.
+            </span>
+          ) : (
+            <span className="text-[11px] text-emerald-400">Selected channels are connected.</span>
+          )}
           <div className="flex gap-3">
             {['linkedin', 'twitter'].map((platform) => {
               const selected = selectedPlatforms.includes(platform);
+              const connected = integrationPlatforms.includes(platform);
               return (
                 <button
                   key={platform}
@@ -214,16 +244,16 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
                     selected
                       ? 'bg-cyan-500/20 border-cyan-400 text-cyan-400 shadow-md shadow-cyan-500/5'
                       : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-                  }`}
+                  } ${connected ? '' : 'border-amber-600/50 text-amber-300'}`}
+                  title={connected ? 'Connected' : 'Not connected'}
                 >
-                  {platform}
+                  {platform} {!connected ? '(not connected)' : ''}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Schedule DateTime */}
         <Input
           id="post-schedule"
           label="Publish Schedule Time"
@@ -234,7 +264,6 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
           required
         />
 
-        {/* Hashtags adder */}
         <div className="flex flex-col gap-2">
           <label htmlFor="hashtag-input" className="text-sm font-medium text-slate-300">Hashtags</label>
           <input
@@ -250,17 +279,10 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
           {hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-1">
               {hashtags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-900 border border-slate-800 text-slate-300"
-                >
+                <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-900 border border-slate-800 text-slate-300">
                   #{tag}
-                  <button
-                    type="button"
-                    onClick={() => removeHashtag(tag)}
-                    className="text-slate-500 hover:text-white cursor-pointer"
-                  >
-                    ×
+                  <button type="button" onClick={() => removeHashtag(tag)} className="text-slate-500 hover:text-white cursor-pointer">
+                    x
                   </button>
                 </span>
               ))}
@@ -268,10 +290,8 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
           )}
         </div>
 
-        {/* Attachments Upload dropzone */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-slate-300">Media Attachments</label>
-          
           <div className="relative border border-dashed border-slate-800 rounded-lg p-6 bg-slate-900/10 hover:bg-slate-900/30 transition-all flex flex-col items-center justify-center text-center">
             <input
               type="file"
@@ -300,7 +320,6 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
             )}
           </div>
 
-          {/* Media previews list */}
           {mediaUrls.length > 0 && (
             <div className="grid grid-cols-4 gap-3 mt-2">
               {mediaUrls.map((url, i) => (
@@ -310,17 +329,15 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
                     alt="attachment preview"
                     className="w-full h-full object-cover rounded-md"
                     onError={(e) => {
-                      // fallback for videos or documents
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
-                  {/* Remove Button overlay */}
                   <button
                     type="button"
                     onClick={() => removeMedia(i)}
                     className="absolute top-1 right-1 h-5 w-5 bg-black/60 rounded-full flex items-center justify-center text-xs text-slate-400 hover:text-white cursor-pointer"
                   >
-                    ×
+                    x
                   </button>
                 </div>
               ))}
@@ -328,7 +345,13 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
           )}
         </div>
 
-        <Button variant="primary" type="submit" isLoading={isSubmitting} className="w-full mt-2">
+        <Button
+          variant="primary"
+          type="submit"
+          isLoading={isSubmitting}
+          className="w-full mt-2"
+          disabled={isSubmitting || disconnectedSelectedPlatforms.length > 0}
+        >
           Create Post & Schedule
         </Button>
       </form>
@@ -341,3 +364,4 @@ export const PostCreatorDialog: React.FC<PostCreatorDialogProps> = ({
     </Dialog>
   );
 };
+

@@ -66,3 +66,28 @@
 ---
 
 *Last updated: 2026-05-29 — Phase 3 completed successfully*
+---
+
+### 2026-05-30: Flow Hardening and Notifications (Post-Phase Enhancements)
+- **Scope**: Phase A + Phase B UX hardening and operational notifications.
+- **Implemented**:
+  - Auth-aware landing flow at `/` with redirect to `/workspaces` when authenticated.
+  - Real password reset flow:
+    - `POST /auth/forgot-password`
+    - `POST /auth/reset-password`
+    - Frontend pages: `/forgot-password`, `/reset-password`
+  - Gmail SMTP mail integration module:
+    - Password reset email delivery
+    - Workspace invite notification email delivery
+  - OAuth flow hardening:
+    - explicit start endpoint per platform
+    - callback endpoint now provider-return only
+  - Phase B UX improvements:
+    - onboarding checklist panel on workspace page
+    - integration guard in post creator
+    - calendar status badges and failure reason surfacing
+    - retry publish action with backend endpoint:
+      - `POST /workspaces/:workspaceId/posts/:id/retry`
+- **Validation**:
+  - Backend build: passed
+  - Frontend build: passed

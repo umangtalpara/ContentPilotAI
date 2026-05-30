@@ -49,6 +49,12 @@ export class PostsController {
     return { success: true };
   }
 
+  @Post(':id/retry')
+  @WorkspaceRoles(UserRole.OWNER, UserRole.EDITOR)
+  async retryPublish(@Param('workspaceId') workspaceId: string, @Param('id') id: string) {
+    return this.postsService.retryFailedPost(workspaceId, id);
+  }
+
   @Post('bulk')
   @WorkspaceRoles(UserRole.OWNER, UserRole.EDITOR)
   @UseInterceptors(FileInterceptor('file'))

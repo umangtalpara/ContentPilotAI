@@ -38,9 +38,11 @@ export default function WorkspacesPage() {
   // Calendar Posts states
   const [posts, setPosts] = useState<any[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
+  const [integrationCount, setIntegrationCount] = useState(0);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'calendar' | 'integrations' | 'analytics'>('calendar');
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   // Comments drawer state
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
@@ -59,8 +61,26 @@ export default function WorkspacesPage() {
     }
   };
 
+  const fetchWorkspaceIntegrations = async () => {
+    if (!currentWorkspace) return;
+    try {
+      const data = await api.get<any[]>(`/workspaces/${currentWorkspace._id}/integrations`);
+      setIntegrationCount(data.length);
+    } catch {
+      setIntegrationCount(0);
+    }
+  };
+
   useEffect(() => {
     fetchWorkspacePosts();
+    fetchWorkspaceIntegrations();
+  }, [currentWorkspace]);
+
+  useEffect(() => {
+    if (!currentWorkspace) return;
+    const key = `cp_onboarding_hidden_${currentWorkspace._id}`;
+    const hidden = localStorage.getItem(key) === '1';
+    setShowOnboarding(!hidden);
   }, [currentWorkspace]);
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
@@ -112,6 +132,12 @@ export default function WorkspacesPage() {
   const cardVariants = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  };
+
+  const markOnboardingHidden = () => {
+    if (!currentWorkspace) return;
+    localStorage.setItem(`cp_onboarding_hidden_${currentWorkspace._id}`, '1');
+    setShowOnboarding(false);
   };
 
   return (
@@ -218,6 +244,42 @@ export default function WorkspacesPage() {
                 </Button>
               </div>
             </div>
+
+            {showOnboarding && (
+              <motion.div variants={cardVariants}>
+                <Card className="glass-panel border-white/5 shadow-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-gradient-premium text-lg">Quick Start Checklist</CardTitle>
+                    <CardDescription>Complete these to publish your first social post.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className={`rounded-lg border p-3 ${integrationCount > 0 ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-800 bg-slate-900/30'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide">1. Connect Platform</div>
+                        <div className="text-[11px] text-slate-400 mt-1">{integrationCount > 0 ? 'Completed' : 'Open Social Connections tab'}</div>
+                      </div>
+                      <div className={`rounded-lg border p-3 ${posts.length > 0 ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-800 bg-slate-900/30'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide">2. Create First Post</div>
+                        <div className="text-[11px] text-slate-400 mt-1">{posts.length > 0 ? 'Completed' : 'Use Create Post button'}</div>
+                      </div>
+                      <div className={`rounded-lg border p-3 ${posts.some((p) => p.status === 'scheduled' || p.status === 'published') ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-800 bg-slate-900/30'}`}>
+                        <div className="text-xs font-bold uppercase tracking-wide">3. Schedule and Publish</div>
+                        <div className="text-[11px] text-slate-400 mt-1">{posts.some((p) => p.status === 'scheduled' || p.status === 'published') ? 'Completed' : 'Pick time and schedule'}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={markOnboardingHidden}
+                        className="text-xs text-slate-400 hover:text-slate-200"
+                      >
+                        Dismiss checklist
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Sub-Tab Navigation Bar */}
             <div className="flex border-b border-white/5 pb-1 gap-6">

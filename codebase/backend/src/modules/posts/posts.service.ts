@@ -132,6 +132,32 @@ export class PostsService {
     });
   }
 
+  async retryFailedPost(workspaceId: string, id: string): Promise<PostDocument> {
+    const post = await this.findOne(workspaceId, id);
+    if (post.status !== PostStatus.FAILED) {
+      throw new BadRequestException('Only failed posts can be retried');
+    }
+
+    const minRetryDate = new Date(Date.now() + 60 * 1000);
+    const retryScheduleAt = post.scheduleAt > minRetryDate ? post.scheduleAt : minRetryDate;
+
+    post.scheduleAt = retryScheduleAt;
+    post.status = PostStatus.SCHEDULED;
+    post.errorMessage = undefined;
+
+    const saved = await post.save();
+    await this.queueService.cancelPublishJob(saved._id.toString());
+    await this.queueService.addPublishJob(saved._id.toString(), saved.scheduleAt);
+
+    void this.collaborationService.logActivity({
+      workspaceId,
+      action: ActivityAction.POST_RESCHEDULED,
+      details: `Failed post "${saved.title}" retried for ${saved.scheduleAt.toISOString()}`,
+    });
+
+    return saved;
+  }
+
   async createBulk(workspaceId: string, csvText: string): Promise<{ createdCount: number; errors: string[] }> {
     const rows = this.parseCsv(csvText);
     if (rows.length < 2) {

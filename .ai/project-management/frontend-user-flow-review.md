@@ -5,21 +5,24 @@ Project: ContentPilot AI
 
 ## 1) What is the current landing page?
 
-Current landing page route `/` renders `Dashboard`:
-- `codebase/frontend/src/app/page.tsx` -> `<Dashboard />`
-- `codebase/frontend/src/components/Dashboard.tsx` currently uses mock analytics data and is not connected to auth/workspace context.
+Current landing page route `/` is now auth-aware:
+- unauthenticated users see a product entry page with `Create Account` and `Sign In` CTAs.
+- authenticated users are redirected to `/workspaces`.
 
-This means your root entry is a demo-style page, not a true product entry flow.
+Reference:
+- `codebase/frontend/src/app/page.tsx`
 
 ## 2) Current implemented flow (as-built)
 
 ### Entry and auth
 1. User opens `/`.
-2. User sees mock dashboard (not auth gated).
-3. User can go to `/login` or `/register`.
+2. If unauthenticated, user sees landing CTAs (`/login` or `/register`).
+3. If authenticated, user is redirected to `/workspaces`.
 4. Login/Register calls backend auth endpoints:
    - `POST /auth/login`
    - `POST /auth/register`
+   - `POST /auth/forgot-password`
+   - `POST /auth/reset-password`
 5. Tokens are stored in localStorage (`cp_access_token`, `cp_refresh_token`).
 6. User is routed to `/workspaces`.
 
@@ -42,7 +45,7 @@ This means your root entry is a demo-style page, not a true product entry flow.
    - post scheduled via `POST /workspaces/:workspaceId/posts`
 4. Scheduled post is queued by backend queue service and later auto-published if integration exists.
 5. Integrations:
-   - connect LinkedIn/X using callback URLs
+   - connect LinkedIn/X using OAuth start endpoint first
    - list/disconnect integrations per workspace.
 
 ### Publishing execution
@@ -53,15 +56,13 @@ This means your root entry is a demo-style page, not a true product entry flow.
 ## 3) Current flow issues (important)
 
 ### P0 (high impact)
-1. Root landing mismatch:
-   - `/` is mock dashboard, not a real landing/auth entry.
-2. Dead link:
-   - Login page links to `/forgot-password`, but route does not exist.
-3. Integration callback host hardcoded:
-   - Backend redirect uses `http://localhost:3000/...`, risky for staging/prod.
-4. Connect flow bypasses normal OAuth initiation:
-   - Frontend directly hits callback URL with `code=mock-code`.
-   - Works for mock mode, but not strong for real OAuth UX/security model.
+1. No open P0 items from Phase A.
+2. Completed and resolved:
+   - `/` auth-aware landing implemented.
+   - `/forgot-password` route added.
+   - real reset-password API flow added.
+   - callback redirect host moved to env config.
+   - OAuth start endpoint introduced before callback handling.
 
 ### P1 (flow quality)
 1. No enforced "connect channel first" guard before scheduling.
@@ -154,12 +155,38 @@ Status date: 2026-05-30
   - Unauthenticated users see landing CTA.
   - Authenticated users are redirected to `/workspaces`.
 - Completed: Added `/forgot-password` page to resolve login dead link.
+- Completed: Added `/reset-password` page and backend token-based reset APIs.
+  - `POST /auth/forgot-password`
+  - `POST /auth/reset-password`
 - Completed: Replaced hardcoded callback redirect host with env-based frontend URL in backend integration callbacks.
 - Completed: Introduced explicit OAuth start endpoint:
   - `GET /workspaces/:workspaceId/integrations/:platform/start`
   - Callback endpoints now handle provider return only.
 - Completed: Frontend integration connect action now uses start endpoint instead of direct callback call.
+- Completed: Gmail SMTP mailer integration for transactional notifications.
+  - Password reset email with real reset link.
+  - Workspace invite email notification.
 
 Notes:
-- `forgot-password` page is currently placeholder UX until reset-token backend endpoints are implemented.
+- In non-production, reset token may still be returned when SMTP is not configured to support local testing.
 - OAuth start endpoint supports mock and production paths based on env/client configuration.
+
+## 8) Recommended Fixes Status (Current)
+
+### Phase B (implemented on 2026-05-30)
+1. Added onboarding checklist component in workspace dashboard:
+   - connect platform
+   - create first post
+   - schedule/publish first post
+2. Added integration guard in `PostCreatorDialog`:
+   - selected disconnected platforms are flagged
+   - scheduling is blocked until selected platforms are connected
+3. Added post status badge and failure reason surfacing in `CalendarGrid`.
+4. Added retry publish action for failed posts:
+   - frontend retry button in calendar
+   - backend retry endpoint: `POST /workspaces/:workspaceId/posts/:id/retry`
+
+### Phase C (pending)
+1. Add guided "Create first campaign" wizard.
+2. Add analytics KPI cards for publish reliability.
+3. Add notifications/toasts for invite, schedule, publish success/failure.
