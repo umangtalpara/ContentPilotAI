@@ -1,6 +1,6 @@
 # Architectural & Implementation Decisions
 
-> This file is automatically maintained by the Super Agent. Every significant decision is recorded with context, rationale, and alternatives considered.
+> This file is updated by the AI when instructed. Every significant decision is recorded with context, rationale, and alternatives considered.
 
 ---
 

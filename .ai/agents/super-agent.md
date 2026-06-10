@@ -80,7 +80,7 @@ RETRY POLICY:
 
 ### 6. Progress Tracking & Documentation
 
-Automatically update these files after every significant event:
+Update these files after every significant event:
 
 | File | Updated When |
 |------|-------------|

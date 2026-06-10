@@ -35,7 +35,7 @@ Produce a comprehensive architecture document covering:
 - **Pattern**: Modular monolith (NestJS modules) with clear domain boundaries for future microservice extraction.
 - **API Layer**: RESTful API with OpenAPI 3.0 specification, versioned endpoints (`/api/v1/*`).
 - **Authentication**: JWT-based auth with access/refresh token rotation, RBAC (Role-Based Access Control).
-- **Communication**: Synchronous (HTTP/REST) for client-facing, asynchronous (RabbitMQ) for background jobs.
+- **Communication**: Synchronous (HTTP/REST) for client-facing, asynchronous (BullMQ/Redis) for background jobs.
 - **Caching Strategy**: Redis for session management, rate limiting, and frequently accessed data.
 - **File Storage**: S3-compatible object storage with signed URLs.
 
@@ -64,7 +64,7 @@ codebase/
 │   │   │   │   └── [feature].repository.ts
 │   │   │   └── ...
 │   │   ├── database/         # Database connections, migrations, seeds
-│   │   ├── queue/            # RabbitMQ producers and consumers
+│   │   ├── queue/            # BullMQ producers, workers, and processors
 │   │   ├── cache/            # Redis configuration and utilities
 │   │   └── main.ts
 │   ├── test/
@@ -106,7 +106,7 @@ For each data entity, specify:
 
 | Persistent data (transactional, billing, logs, documents) | MongoDB | Flexible schema, nested documents, transactions support |
 | Session management, rate limiting, caching | Redis | In-memory speed, TTL support |
-| Background job queues | RabbitMQ | Reliable message delivery, dead-letter queues |
+| Background job queues | BullMQ (Redis) | Reliable message delivery, retries, and failed job queueing |
 
 ### 4. API Design
 
@@ -153,12 +153,12 @@ task:
   description: |
     Create the user registration endpoint with email/password validation,
     password hashing (bcrypt, 12 rounds), duplicate email detection,
-    and welcome email dispatch via RabbitMQ.
+    and welcome email dispatch via BullMQ.
   acceptance_criteria:
     - "POST /api/v1/auth/register accepts valid email and password"
     - "Passwords are hashed using bcrypt with 12 salt rounds"
     - "Duplicate emails return 409 Conflict"
-    - "Successful registration publishes USER_REGISTERED event to RabbitMQ"
+    - "Successful registration publishes USER_REGISTERED job to BullMQ"
     - "Response excludes password hash"
     - "Swagger documentation is complete"
   files_to_create:

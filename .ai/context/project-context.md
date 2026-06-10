@@ -33,7 +33,7 @@ For each phase, agents execute in order:
 ### 4. Iteration
 - Failed tasks are retried (max 3 times) without affecting completed work.
 - Blockers are logged and escalated for human input.
-- Progress is tracked automatically in `project-management/` and `memory/`.
+- Progress is tracked in `project-management/` and `memory/`.
 
 ### 5. Output
 A fully working, tested, and reviewed SaaS application with:

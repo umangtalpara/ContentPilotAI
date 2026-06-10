@@ -1,6 +1,6 @@
 # Blockers
 
-> This file is automatically maintained by the Super Agent. Blockers are logged when a task fails after maximum retries, when a dependency is missing, or when human input is required.
+> This file is updated by the AI when instructed. Blockers are logged when a task fails after maximum retries, when a dependency is missing, or when human input is required.
 
 ---
 

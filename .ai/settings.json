@@ -10,39 +10,27 @@
   "agents": {
     "super-agent": {
       "role": "Master Controller & Orchestrator",
-      "file": "agents/super-agent.md",
-      "priority": 1,
-      "autostart": true
+      "file": "agents/super-agent.md"
     },
     "deep-plan-agent": {
       "role": "Strategic Planning & Architecture",
-      "file": "agents/deep-plan-agent.md",
-      "priority": 2,
-      "autostart": false
+      "file": "agents/deep-plan-agent.md"
     },
     "backend-agent": {
       "role": "Backend Development",
-      "file": "agents/backend-agent.md",
-      "priority": 3,
-      "autostart": false
+      "file": "agents/backend-agent.md"
     },
     "frontend-agent": {
       "role": "Frontend Development",
-      "file": "agents/frontend-agent.md",
-      "priority": 4,
-      "autostart": false
+      "file": "agents/frontend-agent.md"
     },
     "qa-agent": {
       "role": "Quality Assurance & Testing",
-      "file": "agents/qa-agent.md",
-      "priority": 5,
-      "autostart": false
+      "file": "agents/qa-agent.md"
     },
     "code-review-agent": {
       "role": "Code Review & Security Audit",
-      "file": "agents/code-review-agent.md",
-      "priority": 6,
-      "autostart": false
+      "file": "agents/code-review-agent.md"
     }
   },
   "workflow": {
@@ -52,70 +40,42 @@
       "phase-execution",
       "testing",
       "deployment"
-    ],
-    "execution_order": [
-      "super-agent",
-      "deep-plan-agent",
-      "backend-agent",
-      "frontend-agent",
-      "qa-agent",
-      "code-review-agent"
-    ]
-  },
-  "retry_policy": {
-    "max_retries": 3,
-    "retry_failed_only": true,
-    "preserve_completed": true,
-    "backoff_strategy": "exponential",
-    "base_delay_seconds": 5
-  },
-  "documentation": {
-    "auto_update": true,
-    "targets": [
-      "project-management/*",
-      "memory/*"
-    ],
-    "update_triggers": [
-      "task_complete",
-      "task_failed",
-      "phase_complete",
-      "agent_status_change",
-      "blocker_detected"
     ]
   },
   "tech_stack": {
     "backend": {
-      "runtime": "Node.js",
-      "framework": "NestJS",
-      "language": "TypeScript",
+      "runtime": "Node.js 24 LTS",
+      "framework": "NestJS 11.x",
+      "language": "TypeScript 5.x",
       "databases": [
-        "MongoDB"
+        "MongoDB 7.x"
       ],
-      "cache": "Redis",
-      "queue": "RabbitMQ",
+      "orm_odm": "Mongoose 8.x",
+      "cache": "Redis 7.x",
+      "queue": "BullMQ (Redis-backed)",
       "containerization": "Docker",
-      "api_docs": "Swagger/OpenAPI"
+      "api_docs": "Swagger/OpenAPI 3.0"
     },
     "frontend": {
-      "framework": "Next.js",
-      "library": "React",
-      "language": "TypeScript",
-      "styling": "Tailwind CSS",
-      "components": "Shadcn UI",
-      "state": "Zustand",
-      "animations": "Framer Motion"
+      "framework": "Next.js 14.x",
+      "library": "React 18.x",
+      "language": "TypeScript 5.x",
+      "styling": "Tailwind CSS 3.x",
+      "components": "Shadcn UI (Latest)",
+      "state": "Zustand 4.x",
+      "animations": "Framer Motion 11.x"
     },
     "testing": {
-      "unit": "Jest",
-      "integration": "Supertest",
-      "e2e": "Playwright",
+      "unit": "Jest 29.x",
+      "integration": "Supertest (Latest)",
+      "e2e": "Playwright (Latest)",
       "api": "Postman/Newman"
     },
     "devops": {
       "ci_cd": "GitHub Actions",
-      "containerization": "Docker + Docker Compose",
-      "monitoring": "Prometheus + Grafana",
-      "logging": "Winston + ELK"
+      "containerization": "Docker + Docker Compose (Latest)",
+      "monitoring": "Prometheus (Latest) + Grafana (Latest)",
+      "logging": "Winston 3.x + ELK (Latest)"
     }
   },
   "paths": {

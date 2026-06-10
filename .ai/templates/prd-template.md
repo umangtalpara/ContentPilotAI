@@ -148,7 +148,7 @@ Provide a concise overview of the product. What problem does it solve? Who is it
 - Horizontal scaling capability for the application tier
 - Database connection pooling
 - Redis caching for frequently accessed data
-- Message queue for background processing
+- Background job queue for async processing
 
 ### 7.4 Availability
 - 99.9% uptime SLA target
@@ -193,7 +193,7 @@ Provide a concise overview of the product. What problem does it solve? Who is it
 - **Backend**: Node.js, NestJS, TypeScript
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS, Shadcn UI
 - **Databases**: MongoDB (primary persistent database), Redis (cache layer)
-- **Queue**: RabbitMQ
+- **Queue**: BullMQ (Redis-backed)
 - **Containerization**: Docker
 - **API**: RESTful with OpenAPI 3.0 documentation
 

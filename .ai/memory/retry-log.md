@@ -1,6 +1,6 @@
 # Retry Log
 
-> This file is automatically maintained by the Super Agent. Every task retry attempt is recorded with failure details, retry context, and outcome.
+> This file is updated by the AI when instructed. Every task retry attempt is recorded with failure details, retry context, and outcome.
 
 ---
 

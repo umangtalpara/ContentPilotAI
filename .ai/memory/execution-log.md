@@ -1,6 +1,6 @@
 # Execution Log
 
-> This file is automatically maintained by the Super Agent. Every significant agent action, phase transition, and system event is recorded chronologically.
+> This file is updated by the AI when instructed. Every significant agent action, phase transition, and system event is recorded chronologically.
 
 ---
 

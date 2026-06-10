@@ -88,7 +88,7 @@ The Code Review Agent performs comprehensive code reviews across all changes in 
 #### Architecture Scalability
 - [ ] Modules have clear boundaries and can be extracted to microservices.
 - [ ] State is externalized (Redis, database) — no in-memory application state.
-- [ ] Background jobs use message queues (RabbitMQ) for reliable processing.
+- [ ] Background jobs use BullMQ (Redis) for reliable processing.
 - [ ] File storage uses external object storage (S3), not local filesystem.
 - [ ] Database schema supports multi-tenancy (if required by PRD).
 

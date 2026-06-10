@@ -5,7 +5,7 @@
 | Technology | Version | Purpose |
 |-----------|---------|---------|
 | **Node.js** | 24 LTS | JavaScript runtime |
-| **NestJS** | 10.x | Progressive Node.js framework |
+| **NestJS** | 11.x | Progressive Node.js framework |
 | **TypeScript** | 5.x | Type-safe JavaScript (strict mode) |
 | **Mongoose** | 8.x | MongoDB ODM (Primary Database ORM) |
 | **Passport** | 0.7.x | Authentication middleware |
@@ -17,7 +17,7 @@
 | **@nestjs/config** | 3.x | Configuration management |
 | **@nestjs/throttler** | 5.x | Rate limiting |
 | **@nestjs/cache-manager** | 2.x | Caching abstraction |
-| **@nestjs/bull** | 10.x | Job queue (RabbitMQ adapter) |
+| **@nestjs/bullmq** | 11.x | BullMQ job queue (Redis-backed) |
 | **Winston** | 3.x | Structured logging |
 | **helmet** | 7.x | HTTP security headers |
 | **cors** | 2.x | Cross-Origin Resource Sharing |
@@ -53,11 +53,11 @@
 | **MongoDB** | 7.x | Primary database (transactional and flexible document data) |
 | **Redis** | 7.x | In-memory cache, sessions, rate limiting |
 
-## Message Queue
+## Background Jobs
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| **RabbitMQ** | 3.x | Asynchronous message queue for background jobs |
+| **BullMQ** | 5.x | Redis-backed job queue for background tasks |
 
 ## Testing
 
@@ -95,6 +95,6 @@
 ## Version Compatibility Notes
 
 - Node.js 24 LTS is required for native fetch and latest ESM support.
-- NestJS 10.x requires Node.js 16+ and TypeScript 4.7+.
+- NestJS 11.x requires Node.js 18+ and TypeScript 5.0+.
 - Next.js 14.x requires React 18.x and Node.js 18+.
 - Mongoose 8.x requires Node.js 16+ and has improved TypeScript support.

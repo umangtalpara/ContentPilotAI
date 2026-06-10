@@ -26,9 +26,9 @@ The application follows a modular monolith architecture using NestJS modules. Ea
 │  │ MongoDB  │  │  Redis   │                         │
 │  └──────────┘  └──────────┘                         │
 │                                                     │
-│  ┌──────────┐                                      │
-│  │ RabbitMQ │                                      │
-│  └──────────┘                                      │
+│  ┌──────────┐                                       │
+│  │  BullMQ  │                                       │
+│  └──────────┘                                       │
 │                                                     │
 └────────────────────────────────────────────────────┘
 ```
@@ -65,8 +65,8 @@ Entity Layer       → Data models, schema definitions
 - Avoid circular dependencies — use `forwardRef()` only as a last resort.
 
 #### Across Modules (Decoupled)
-- Use RabbitMQ for event-driven communication.
-- Event naming: `module.entity.action` (e.g., `auth.user.registered`).
+- Use BullMQ (Redis) for background jobs and events.
+- Event/Job naming: `module.entity.action` (e.g., `auth.user.registered`).
 - Events are fire-and-forget — don't wait for processing.
 - Consumers are idempotent — safe to process the same event twice.
 

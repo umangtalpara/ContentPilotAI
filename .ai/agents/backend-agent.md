@@ -18,11 +18,11 @@ The Backend Agent builds the server-side application. It implements API endpoint
 | Technology | Version | Usage |
 |-----------|---------|-------|
 | Node.js | 24 LTS | Runtime |
-| NestJS | 10.x | Application framework |
+| NestJS | 11.x | Application framework |
 | TypeScript | 5.x | Language (strict mode) |
 | MongoDB | 7.x | Primary database (transactional & flexible document data) |
 | Redis | 7.x | Caching, sessions, rate limiting |
-| RabbitMQ | 3.x | Message queue |
+| BullMQ | 5.x | Redis-backed job queue |
 | Docker | Latest | Containerization |
 | Swagger | OpenAPI 3.0 | API documentation |
 | Jest | 29.x | Unit & integration testing |
